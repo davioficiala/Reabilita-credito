@@ -21,7 +21,7 @@ text-align:center;
 }
 
 .container{
-max-width:600px;
+max-width:700px;
 margin:30px auto;
 background:white;
 padding:25px;
@@ -32,10 +32,12 @@ box-shadow:0 0 10px rgba(0,0,0,0.1);
 input{
 width:100%;
 padding:12px;
-margin-top:10px;
+margin-top:5px;
+margin-bottom:10px;
 border:1px solid #ccc;
 border-radius:5px;
 font-size:15px;
+box-sizing:border-box;
 }
 
 button{
@@ -60,6 +62,13 @@ padding:15px;
 margin-top:15px;
 border-radius:8px;
 border:1px solid #ddd;
+}
+
+label{
+display:block;
+margin-top:10px;
+font-weight:bold;
+color:#333;
 }
 
 #cadastro,
@@ -164,7 +173,7 @@ Voltar
 
 </div>
 
-<!-- 📊 PAINEL ADMIN -->
+<!-- 📊 ADMIN -->
 <div class="container" id="adminPanel">
 
 <h2>📊 Painel Admin</h2>
@@ -195,9 +204,6 @@ setDoc,
 getDoc
 }
 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-
-
-// 🔥 FIREBASE
 
 const firebaseConfig = {
 
@@ -243,7 +249,7 @@ document.getElementById("login").style.display = "none";
 }
 
 
-// 🔐 LOGIN ADMIN
+// 🔐 LOGIN
 
 window.loginAdmin = function(){
 
@@ -267,7 +273,7 @@ document.getElementById("msg").innerText =
 }
 
 
-// 💳 CADASTRO CLIENTE
+// 💳 CADASTRO
 
 window.cadastrarCliente = async function(){
 
@@ -357,15 +363,10 @@ status
 
 });
 
-
-// 📊 RESULTADO
-
 document.getElementById("resultado").innerHTML =
 
 `
 ✔ Cadastro enviado com sucesso<br><br>
-
-👤 ${nome}<br>
 
 📊 Score: ${score}<br>
 
@@ -389,63 +390,70 @@ if(snap.exists()){
 
 let c = snap.data();
 
-
-// 🎉 ANIVERSÁRIO
-
-let aniversario = "";
-
-const hoje = new Date();
-
-const nasc = new Date(c.nascimento);
-
-if(
-hoje.getDate() === nasc.getDate() &&
-hoje.getMonth() === nasc.getMonth()
-){
-
-aniversario =
-"🎉 Cliente faz aniversário hoje";
-
-}
-
-
-// 📋 MOSTRAR DADOS
-
 document.getElementById("resultadoBusca").innerHTML = `
 
 <div class="card">
 
 <h3>Cliente Encontrado</h3>
 
-👤 Nome: ${c.nome}<br><br>
+<label>CPF</label>
+<input id="cpfEdit" value="${c.cpf}" disabled>
 
-🪪 CPF: ${c.cpf}<br><br>
+<label>Nome</label>
+<input id="nomeEdit" value="${c.nome}" disabled>
 
-📄 RG: ${c.rg}<br><br>
+<label>RG</label>
+<input id="rgEdit" value="${c.rg}" disabled>
 
-📧 E-mail: ${c.email}<br><br>
+<label>E-mail</label>
+<input id="emailEdit" value="${c.email}" disabled>
 
-📱 Telefone: ${c.telefone}<br><br>
+<label>Telefone</label>
+<input id="telefoneEdit" value="${c.telefone}" disabled>
 
-🎂 Nascimento: ${c.nascimento}<br><br>
+<label>Data Nascimento</label>
+<input id="nascimentoEdit" value="${c.nascimento}" disabled>
 
-${aniversario}<br><br>
+<label>Idade</label>
+<input id="idadeEdit" value="${c.idade}" disabled>
 
-🎂 Idade: ${c.idade}<br><br>
+<label>Renda</label>
+<input id="rendaEdit" value="${c.renda}" disabled>
 
-💰 Renda: ${c.renda}<br><br>
+<label>Atrasos</label>
+<input id="atrasosEdit" value="${c.atrasos}" disabled>
 
-📉 Atrasos: ${c.atrasos}<br><br>
+<label>Dívidas</label>
+<input id="dividasEdit" value="${c.dividas}" disabled>
 
-⚠ Dívidas: ${c.dividas}<br><br>
+<label>Rua</label>
+<input id="ruaEdit" value="${c.rua}" disabled>
 
-📊 Score: ${c.score}<br><br>
+<label>Número</label>
+<input id="numeroEdit" value="${c.numero}" disabled>
 
-⚖ Status: ${c.status}<br><br>
+<label>Bairro</label>
+<input id="bairroEdit" value="${c.bairro}" disabled>
 
-🏠 ${c.rua}, ${c.numero}<br>
+<label>Cidade</label>
+<input id="cidadeEdit" value="${c.cidade}" disabled>
 
-📍 ${c.bairro} - ${c.cidade}/${c.estado}
+<label>Estado</label>
+<input id="estadoEdit" value="${c.estado}" disabled>
+
+<label>Score</label>
+<input id="scoreEdit" value="${c.score}" disabled>
+
+<label>Status</label>
+<input id="statusEdit" value="${c.status}" disabled>
+
+<button onclick="editarCliente()">
+Alterar Dados
+</button>
+
+<button onclick="salvarAlteracoes()">
+Salvar Alterações
+</button>
 
 </div>
 
@@ -457,6 +465,109 @@ document.getElementById("resultadoBusca").innerHTML =
 "❌ Cliente não encontrado";
 
 }
+
+}
+
+
+// ✏ EDITAR
+
+window.editarCliente = function(){
+
+document.getElementById("nomeEdit").disabled = false;
+
+document.getElementById("rgEdit").disabled = false;
+
+document.getElementById("emailEdit").disabled = false;
+
+document.getElementById("telefoneEdit").disabled = false;
+
+document.getElementById("nascimentoEdit").disabled = false;
+
+document.getElementById("idadeEdit").disabled = false;
+
+document.getElementById("rendaEdit").disabled = false;
+
+document.getElementById("atrasosEdit").disabled = false;
+
+document.getElementById("dividasEdit").disabled = false;
+
+document.getElementById("ruaEdit").disabled = false;
+
+document.getElementById("numeroEdit").disabled = false;
+
+document.getElementById("bairroEdit").disabled = false;
+
+document.getElementById("cidadeEdit").disabled = false;
+
+document.getElementById("estadoEdit").disabled = false;
+
+document.getElementById("scoreEdit").disabled = false;
+
+document.getElementById("statusEdit").disabled = false;
+
+}
+
+
+// 💾 SALVAR ALTERAÇÕES
+
+window.salvarAlteracoes = async function(){
+
+let cpf =
+document.getElementById("cpfEdit").value;
+
+await setDoc(doc(db, "clientes", cpf), {
+
+nome:
+document.getElementById("nomeEdit").value,
+
+rg:
+document.getElementById("rgEdit").value,
+
+email:
+document.getElementById("emailEdit").value,
+
+telefone:
+document.getElementById("telefoneEdit").value,
+
+nascimento:
+document.getElementById("nascimentoEdit").value,
+
+idade:
+document.getElementById("idadeEdit").value,
+
+renda:
+document.getElementById("rendaEdit").value,
+
+atrasos:
+document.getElementById("atrasosEdit").value,
+
+dividas:
+document.getElementById("dividasEdit").value,
+
+rua:
+document.getElementById("ruaEdit").value,
+
+numero:
+document.getElementById("numeroEdit").value,
+
+bairro:
+document.getElementById("bairroEdit").value,
+
+cidade:
+document.getElementById("cidadeEdit").value,
+
+estado:
+document.getElementById("estadoEdit").value,
+
+score:
+document.getElementById("scoreEdit").value,
+
+status:
+document.getElementById("statusEdit").value
+
+}, { merge:true });
+
+alert("✔ Dados atualizados");
 
 }
 
