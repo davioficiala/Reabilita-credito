@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Crédito</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#eef2f7;
+}
+
+header{
+background:#1e2a38;
+color:white;
+padding:20px;
+text-align:center;
+}
+
+.container{
+max-width:500px;
+margin:30px auto;
+background:white;
+padding:25px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:1px solid #ccc;
+border-radius:5px;
+font-size:15px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:15px;
+border:none;
+border-radius:5px;
+background:#2563eb;
+color:white;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+.card{
+background:#f8fafc;
+padding:15px;
+margin-top:15px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+#cadastro,
+#login,
+#adminPanel{
+display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>💳 Sistema de Crédito</h1>
+<p>Análise financeira inteligente</p>
+</header>
+
+<!-- HOME -->
+<div class="container" id="home">
+
+<h2>Bem-vindo</h2>
+
+<button onclick="abrirCadastro()">
+Cadastrar Cliente
+</button>
+
+<button onclick="abrirLogin()">
+Login Administrador
+</button>
+
+</div>
+
+<!-- CADASTRO CLIENTE -->
+<div class="container" id="cadastro">
+
+<h2>Cadastro Cliente</h2>
+
+<input id="nome" placeholder="Nome completo">
+
+<input id="cpf" placeholder="CPF">
+
+<input id="rg" placeholder="RG">
+
+<input id="idade" placeholder="Idade">
+
+<input id="renda" placeholder="Renda mensal">
+
+<input id="atrasos" placeholder="Quantidade atrasos">
+
+<input id="dividas" placeholder="Possui dívidas?">
+
+<input id="cidade" placeholder="Cidade">
+
+<input id="estado" placeholder="Estado">
+
+<button onclick="cadastrarCliente()">
+Enviar Cadastro
+</button>
+
+<p id="resultado"></p>
+
+<button onclick="voltarHome()">
+Voltar
+</button>
+
+</div>
+
+<!-- LOGIN ADMIN -->
+<div class="container" id="login">
+
+<h2>🔐 Login Administrador</h2>
+
+<input id="user" placeholder="Usuário">
+
+<input id="pass" type="password" placeholder="Senha">
+
+<button onclick="loginAdmin()">
+Entrar
+</button>
+
+<p id="msg"></p>
+
+<button onclick="voltarHome()">
+Voltar
+</button>
+
+</div>
+
+<!-- PAINEL ADMIN -->
+<div class="container" id="adminPanel">
+
+<h2>📊 Painel Admin</h2>
+
+<button onclick="carregarClientes()">
+Atualizar Clientes
+</button>
+
+<div id="lista"></div>
+
+<button onclick="sair()">
+Sair
+</button>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+
+import {
+getFirestore,
+doc,
+setDoc,
+collection,
+getDocs
+}
+from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey: "SUA_API_KEY",
+
+authDomain: "sistema-credito-9f4cb.firebaseapp.com",
+
+projectId: "sistema-credito-9f4cb"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+
+// 🏠 HOME
+
+window.abrirCadastro = function(){
+
+document.getElementById("home").style.display = "none";
+
+document.getElementById("cadastro").style.display = "block";
+
+}
+
+window.abrirLogin = function(){
+
+document.getElementById("home").style.display = "none";
+
+document.getElementById("login").style.display = "block";
+
+}
+
+window.voltarHome = function(){
+
+document.getElementById("home").style.display = "block";
+
+document.getElementById("cadastro").style.display = "none";
+
+document.getElementById("login").style.display = "none";
+
+}
+
+
+// 🔐 LOGIN ADMIN
+
+window.loginAdmin = function(){
+
+let u = document.getElementById("user").value;
+
+let p = document.getElementById("pass").value;
+
+if(u === "admin" && p === "1234"){
+
+document.getElementById("login").style.display = "none";
+
+document.getElementById("adminPanel").style.display = "block";
+
+}else{
+
+document.getElementById("msg").innerText =
+"❌ Login inválido";
+
+}
+
+}
+
+
+// 💳 CADASTRO CLIENTE
+
+window.cadastrarCliente = async function(){
+
+let nome = document.getElementById("nome").value;
+
+let cpf = document.getElementById("cpf").value;
+
+let rg = document.getElementById("rg").value;
+
+let idade = document.getElementById("idade").value;
+
+let renda = Number(document.getElementById("renda").value);
+
+let atrasos = Number(document.getElementById("atrasos").value);
+
+let dividas = document.getElementById("dividas").value;
+
+let cidade = document.getElementById("cidade").value;
+
+let estado = document.getElementById("estado").value;
+
+
+// 🧠 SCORE
+
+let score = 50;
+
+if(renda > 3000) score += 20;
+
+score -= atrasos * 10;
+
+if(dividas === "sim") score -= 20;
+
+
+// ⚖ STATUS
+
+let status = "";
+
+if(score >= 80){
+
+status = "🟢 Aprovado";
+
+}else if(score >= 50){
+
+status = "🟡 Em análise";
+
+}else{
+
+status = "🔴 Negado";
+
+}
+
+
+// 💾 FIREBASE
+
+await setDoc(doc(db, "clientes", cpf), {
+
+nome,
+cpf,
+rg,
+idade,
+renda,
+atrasos,
+dividas,
+cidade,
+estado,
+score,
+status
+
+});
+
+
+// 📊 RESULTADO
+
+document.getElementById("resultado").innerHTML =
+
+`
+✔ Cadastro enviado com sucesso<br><br>
+
+👤 ${nome}<br>
+
+📊 Score: ${score}<br>
+
+⚖ Status: ${status}
+`;
+
+}
+
+
+// 📋 PAINEL ADMIN
+
+window.carregarClientes = async function(){
+
+let lista = document.getElementById("lista");
+
+lista.innerHTML = "";
+
+let dados = await getDocs(collection(db, "clientes"));
+
+dados.forEach(d => {
+
+let c = d.data();
+
+lista.innerHTML += `
+
+<div class="card">
+
+👤 ${c.nome}<br><br>
+
+🪪 CPF: ${c.cpf}<br>
+
+📄 RG: ${c.rg}<br>
+
+🎂 Idade: ${c.idade}<br>
+
+💰 Renda: ${c.renda}<br>
+
+📊 Score: ${c.score}<br>
+
+⚖ ${c.status}<br>
+
+📍 ${c.cidade} - ${c.estado}
+
+</div>
+
+`;
+
+});
+
+}
+
+
+// 🚪 SAIR
+
+window.sair = function(){
+
+location.reload();
+
+}
+
+</script>
+
+</body>
+</html>
