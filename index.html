@@ -120,9 +120,28 @@ Login Administrador
 
 <input id="telefone" placeholder="Telefone">
 
-<input id="nascimento" type="date">
+<label>Data Nascimento</label>
 
-<input id="idade" placeholder="Idade">
+<input
+id="nascimento"
+type="date"
+onchange="calcularIdade()"
+>
+
+<label>Idade</label>
+
+<input
+id="idade"
+placeholder="Idade"
+readonly
+>
+
+<label>Data Cadastro</label>
+
+<input
+id="dataCadastro"
+readonly
+>
 
 <input id="renda" placeholder="Renda mensal">
 
@@ -220,6 +239,39 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
+// 🧠 CALCULAR IDADE
+
+window.calcularIdade = function(){
+
+let nasc =
+document.getElementById("nascimento").value;
+
+let hoje = new Date();
+
+let dataNasc = new Date(nasc);
+
+let idade =
+hoje.getFullYear() - dataNasc.getFullYear();
+
+let mes =
+hoje.getMonth() - dataNasc.getMonth();
+
+if(
+mes < 0 ||
+(mes === 0 &&
+hoje.getDate() < dataNasc.getDate())
+){
+
+idade--;
+
+}
+
+document.getElementById("idade").value =
+idade + " anos";
+
+}
+
+
 // 🏠 HOME
 
 window.abrirCadastro = function(){
@@ -227,6 +279,9 @@ window.abrirCadastro = function(){
 document.getElementById("home").style.display = "none";
 
 document.getElementById("cadastro").style.display = "block";
+
+document.getElementById("dataCadastro").value =
+new Date().toLocaleDateString("pt-BR");
 
 }
 
@@ -273,7 +328,7 @@ document.getElementById("msg").innerText =
 }
 
 
-// 💳 CADASTRO
+// 💳 CADASTRO CLIENTE
 
 window.cadastrarCliente = async function(){
 
@@ -290,7 +345,11 @@ let telefone = document.getElementById("telefone").value;
 let nascimento =
 document.getElementById("nascimento").value;
 
-let idade = document.getElementById("idade").value;
+let idade =
+document.getElementById("idade").value;
+
+let dataCadastro =
+document.getElementById("dataCadastro").value;
 
 let renda = Number(document.getElementById("renda").value);
 
@@ -350,6 +409,7 @@ email,
 telefone,
 nascimento,
 idade,
+dataCadastro,
 renda,
 atrasos,
 dividas,
@@ -416,6 +476,9 @@ document.getElementById("resultadoBusca").innerHTML = `
 
 <label>Idade</label>
 <input id="idadeEdit" value="${c.idade}" disabled>
+
+<label>Data Cadastro</label>
+<input id="dataCadastroEdit" value="${c.dataCadastro}" disabled>
 
 <label>Renda</label>
 <input id="rendaEdit" value="${c.renda}" disabled>
