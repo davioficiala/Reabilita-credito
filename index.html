@@ -90,7 +90,8 @@ display:none;
 
 </header>
 
-<!-- 🏠 HOME -->
+<!-- HOME -->
+
 <div class="container" id="home">
 
 <h2>Bem-vindo</h2>
@@ -105,7 +106,8 @@ Login Administrador
 
 </div>
 
-<!-- 📝 CADASTRO -->
+<!-- CADASTRO -->
+
 <div class="container" id="cadastro">
 
 <h2>Cadastro Cliente</h2>
@@ -132,7 +134,6 @@ onchange="calcularIdade()"
 
 <input
 id="idade"
-placeholder="Idade"
 readonly
 >
 
@@ -147,7 +148,7 @@ readonly
 
 <input id="atrasos" placeholder="Quantidade atrasos">
 
-<input id="dividas" placeholder="Possui dívidas?">
+<input id="dividas" placeholder="Possui dívidas? (sim/não)">
 
 <input id="rua" placeholder="Rua">
 
@@ -171,7 +172,8 @@ Voltar
 
 </div>
 
-<!-- 🔐 LOGIN -->
+<!-- LOGIN -->
+
 <div class="container" id="login">
 
 <h2>🔐 Login Administrador</h2>
@@ -192,10 +194,35 @@ Voltar
 
 </div>
 
-<!-- 📊 ADMIN -->
+<!-- ADMIN -->
+
 <div class="container" id="adminPanel">
 
 <h2>📊 Painel Admin</h2>
+
+<div class="card">
+
+<h3>📈 Informações Sistema</h3>
+
+<p id="relogio"></p>
+
+<p id="totalClientes">
+👥 Clientes cadastrados: 0
+</p>
+
+<p id="mediaRenda">
+💰 Média renda: R$ 0
+</p>
+
+<p id="mediaScore">
+📊 Média score: 0
+</p>
+
+<p id="clientesDivida">
+⚠ Clientes com dívida: 0
+</p>
+
+</div>
 
 <input id="buscarCpf" placeholder="Digite CPF cliente">
 
@@ -220,7 +247,9 @@ import {
 getFirestore,
 doc,
 setDoc,
-getDoc
+getDoc,
+collection,
+getDocs
 }
 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
@@ -239,7 +268,20 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 
-// 🧠 CALCULAR IDADE
+// RELÓGIO
+
+setInterval(()=>{
+
+let agora = new Date();
+
+document.getElementById("relogio").innerHTML =
+
+"🕒 " + agora.toLocaleTimeString("pt-BR");
+
+},1000);
+
+
+// CALCULAR IDADE
 
 window.calcularIdade = function(){
 
@@ -272,7 +314,7 @@ idade + " anos";
 }
 
 
-// 🏠 HOME
+// HOME
 
 window.abrirCadastro = function(){
 
@@ -304,9 +346,9 @@ document.getElementById("login").style.display = "none";
 }
 
 
-// 🔐 LOGIN
+// LOGIN ADMIN
 
-window.loginAdmin = function(){
+window.loginAdmin = async function(){
 
 let u = document.getElementById("user").value;
 
@@ -318,6 +360,8 @@ document.getElementById("login").style.display = "none";
 
 document.getElementById("adminPanel").style.display = "block";
 
+carregarDashboard();
+
 }else{
 
 document.getElementById("msg").innerText =
@@ -328,7 +372,65 @@ document.getElementById("msg").innerText =
 }
 
 
-// 💳 CADASTRO CLIENTE
+// DASHBOARD
+
+window.carregarDashboard = async function(){
+
+const querySnapshot =
+await getDocs(collection(db, "clientes"));
+
+let total = 0;
+
+let somaRenda = 0;
+
+let somaScore = 0;
+
+let dividas = 0;
+
+querySnapshot.forEach((doc)=>{
+
+let c = doc.data();
+
+total++;
+
+somaRenda += Number(c.renda || 0);
+
+somaScore += Number(c.score || 0);
+
+if(c.dividas === "sim"){
+
+dividas++;
+
+}
+
+});
+
+let mediaRenda =
+(total > 0)
+? (somaRenda / total).toFixed(2)
+: 0;
+
+let mediaScore =
+(total > 0)
+? (somaScore / total).toFixed(0)
+: 0;
+
+document.getElementById("totalClientes").innerHTML =
+"👥 Clientes cadastrados: " + total;
+
+document.getElementById("mediaRenda").innerHTML =
+"💰 Média renda: R$ " + mediaRenda;
+
+document.getElementById("mediaScore").innerHTML =
+"📊 Média score: " + mediaScore;
+
+document.getElementById("clientesDivida").innerHTML =
+"⚠ Clientes com dívida: " + dividas;
+
+}
+
+
+// CADASTRO CLIENTE
 
 window.cadastrarCliente = async function(){
 
@@ -351,11 +453,21 @@ document.getElementById("idade").value;
 let dataCadastro =
 document.getElementById("dataCadastro").value;
 
-let renda = Number(document.getElementById("renda").value);
+let renda = parseFloat(
+document.getElementById("renda")
+.value
+.replace("R$","")
+.replace(/\./g,"")
+.replace(",",".")
+.trim()
+) || 0;
 
-let atrasos = Number(document.getElementById("atrasos").value);
+let atrasos = parseInt(
+document.getElementById("atrasos").value
+) || 0;
 
-let dividas = document.getElementById("dividas").value;
+let dividas =
+document.getElementById("dividas").value;
 
 let rua = document.getElementById("rua").value;
 
@@ -368,37 +480,69 @@ let cidade = document.getElementById("cidade").value;
 let estado = document.getElementById("estado").value;
 
 
-// 🧠 SCORE
+// SCORE
 
-let score = 50;
+let score = 500;
 
-if(renda > 3000) score += 20;
+if(renda >= 1500){
 
-score -= atrasos * 10;
+score += 50;
 
-if(dividas === "sim") score -= 20;
+}
 
+if(renda >= 3000){
 
-// ⚖ STATUS
+score += 100;
 
-let status = "";
+}
 
-if(score >= 80){
+if(renda >= 5000){
 
-status = "🟢 Aprovado";
+score += 150;
 
-}else if(score >= 50){
+}
 
-status = "🟡 Em análise";
+score -= atrasos * 80;
 
-}else{
+if(dividas.toLowerCase() === "sim"){
 
-status = "🔴 Negado";
+score -= 250;
+
+}
+
+if(score < 0){
+
+score = 0;
+
+}
+
+if(score > 1000){
+
+score = 1000;
 
 }
 
 
-// 💾 FIREBASE
+// STATUS
+
+let status = "";
+
+if(score >= 700){
+
+status = "🟢 Excelente";
+
+}else if(score >= 400){
+
+status = "🟡 Médio";
+
+}else{
+
+status = "🔴 Baixo";
+
+}
+
+
+// FIREBASE
 
 await setDoc(doc(db, "clientes", cpf), {
 
@@ -433,10 +577,12 @@ document.getElementById("resultado").innerHTML =
 ⚖ ${status}
 `;
 
+carregarDashboard();
+
 }
 
 
-// 🔎 BUSCAR CLIENTE
+// BUSCAR CLIENTE
 
 window.buscarCliente = async function(){
 
@@ -532,7 +678,7 @@ document.getElementById("resultadoBusca").innerHTML =
 }
 
 
-// ✏ EDITAR
+// EDITAR CLIENTE
 
 window.editarCliente = function(){
 
@@ -564,19 +710,96 @@ document.getElementById("cidadeEdit").disabled = false;
 
 document.getElementById("estadoEdit").disabled = false;
 
-document.getElementById("scoreEdit").disabled = false;
-
-document.getElementById("statusEdit").disabled = false;
-
 }
 
 
-// 💾 SALVAR ALTERAÇÕES
+// SALVAR ALTERAÇÕES
 
 window.salvarAlteracoes = async function(){
 
 let cpf =
 document.getElementById("cpfEdit").value;
+
+let renda = parseFloat(
+document.getElementById("rendaEdit")
+.value
+.replace("R$","")
+.replace(/\./g,"")
+.replace(",",".")
+.trim()
+) || 0;
+
+let atrasos = parseInt(
+document.getElementById("atrasosEdit").value
+) || 0;
+
+let dividas =
+document.getElementById("dividasEdit").value;
+
+
+// SCORE
+
+let score = 500;
+
+if(renda >= 1500){
+
+score += 50;
+
+}
+
+if(renda >= 3000){
+
+score += 100;
+
+}
+
+if(renda >= 5000){
+
+score += 150;
+
+}
+
+score -= atrasos * 80;
+
+if(dividas.toLowerCase() === "sim"){
+
+score -= 250;
+
+}
+
+if(score < 0){
+
+score = 0;
+
+}
+
+if(score > 1000){
+
+score = 1000;
+
+}
+
+
+// STATUS
+
+let status = "";
+
+if(score >= 700){
+
+status = "🟢 Excelente";
+
+}else if(score >= 400){
+
+status = "🟡 Médio";
+
+}else{
+
+status = "🔴 Baixo";
+
+}
+
+
+// FIREBASE
 
 await setDoc(doc(db, "clientes", cpf), {
 
@@ -598,14 +821,17 @@ document.getElementById("nascimentoEdit").value,
 idade:
 document.getElementById("idadeEdit").value,
 
+dataCadastro:
+document.getElementById("dataCadastroEdit").value,
+
 renda:
-document.getElementById("rendaEdit").value,
+renda,
 
 atrasos:
-document.getElementById("atrasosEdit").value,
+atrasos,
 
 dividas:
-document.getElementById("dividasEdit").value,
+dividas,
 
 rua:
 document.getElementById("ruaEdit").value,
@@ -623,19 +849,27 @@ estado:
 document.getElementById("estadoEdit").value,
 
 score:
-document.getElementById("scoreEdit").value,
+score,
 
 status:
-document.getElementById("statusEdit").value
+status
 
 }, { merge:true });
 
+document.getElementById("scoreEdit").value =
+score;
+
+document.getElementById("statusEdit").value =
+status;
+
 alert("✔ Dados atualizados");
+
+carregarDashboard();
 
 }
 
 
-// 🚪 SAIR
+// SAIR
 
 window.sair = function(){
 
